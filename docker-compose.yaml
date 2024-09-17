@@ -1,0 +1,44 @@
+version: '3.1'
+
+services:
+    flowise:
+        image: flowiseai/flowise:2.0.4
+        restart: always
+        environment:
+              PORT: ${PORT_3000}
+              CORS_ORIGINS: "*"
+              IFRAME_ORIGINS: "*"
+              FLOWISE_USERNAME: admin
+              FLOWISE_PASSWORD: password
+              FLOWISE_FILE_SIZE_LIMIT: 100MB
+              DEBUG: false
+              DATABASE_TYPE: postgres
+              DATABASE_HOST: database
+              DATABASE_PORT: ${PORT_5432}
+              DATABASE_NAME: ${POSTGRES_DB:-flowise}
+              DATABASE_USER: $SERVICE_USER_POSTGRES
+              DATABASE_PASSWORD: $SERVICE_PASSWORD_POSTGRES
+              DATABASE_SSL: false
+              FLOWISE_SECRETKEY_OVERWRITE: true
+              LOG_LEVEL: info
+              DISABLE_FLOWISE_TELEMETRY: true
+        ports:
+            - '${PORT_3000}:3000'
+        volumes:
+            - ~/.flowise:/root/.flowise
+        entrypoint: /bin/sh -c "sleep 3; flowise start"
+        depends_on:
+            - database
+
+    database:
+        image: postgres:13
+        restart: always
+        environment:
+            POSTGRES_DB: flowise-db
+            POSTGRES_USER: $SERVICE_USER_POSTGRES
+            POSTGRES_PASSWORD: $SERVICE_PASSWORD_POSTGRES
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
